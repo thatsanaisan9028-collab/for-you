@@ -3,118 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>มีอะไรอยากให้เปิดดูครับ</title>
+    <!-- ชื่อเนียนๆ ไม่สปอยล์ -->
+    <title>มุมพักผ่อนสำหรับคุณ 🌿</title>
     <style>
-        body {
-            background-color: #050505;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .heart-wrapper {
-            position: relative;
-            width: 500px;
-            height: 500px;
+        body {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            /* หัวใจเต้นพอง-ยุบแบบอนันต์ (infinite) */
-            animation: heartBeat 1.5s infinite ease-in-out;
+            font-family: 'Sukhumvit Set', 'Segoe UI', Tahoma, sans-serif;
+            overflow-x: hidden;
+            padding: 20px;
         }
 
-        .text {
-            position: absolute;
-            color: #ff69b4; /* สีชมพู */
+        .card-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 30px 25px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .avatar {
+            font-size: 70px;
+            margin-bottom: 10px;
+            animation: float 2s infinite ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            color: #5a4b81;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: #7b6b9d;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        /* เมนูปุ่มกด */
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .heal-btn {
+            background: #ffffff;
+            color: #6a5a8e;
+            border: 2px solid #dcd6f7;
+            padding: 14px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
             font-weight: bold;
-            font-size: 15px;
-            white-space: nowrap;
-            text-shadow: 0 0 10px #ff1493, 0 0 20px #ff69b4, 0 0 30px #ff1493; /* แสง นีออน สว่างขึ้น */
-            /* เอฟเฟกต์ไฟกระพริบวิบวับวนลูปตลอดไป */
-            animation: glowPulse 2s infinite ease-in-out alternate;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
-        /* จังหวะเต้นของหัวใจแบบวนลูปตลอดไป */
-        @keyframes heartBeat {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
+        .heal-btn:hover {
+            background: #a8d8ea;
+            color: #fff;
+            border-color: #a8d8ea;
+            transform: scale(1.03);
         }
 
-        /* จังหวะไฟกระพริบเรืองแสงวนลูปตลอดไป */
-        @keyframes glowPulse {
-            0% {
-                opacity: 0.7;
-                filter: drop-shadow(0 0 2px #ff69b4);
-            }
-            100% {
-                opacity: 1;
-                filter: drop-shadow(0 0 12px #ff1493);
-            }
+        .heal-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ปุ่มพ่นหัวใจระบายความเครียด */
+        .burst-btn {
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .burst-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* กล่องแสดงคำพูดโอ๋ๆ */
+        .message-box {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0ebf7;
+            border-radius: 15px;
+            color: #4a3e6d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-left: 4px solid #aa96da;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* เอฟเฟกต์หัวใจ/ดาว ลอย */
+        .floating-emoji {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            animation: rise 2s linear forwards;
+            z-index: 999;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120vh) scale(1.5); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div class="heart-wrapper" id="heart"></div>
+    <div class="card-container">
+        <div class="avatar" id="avatarEmoji">🧸</div>
+        <h1>มุมโหมดโอ๋คนเก่ง ✨</h1>
+        <p class="subtitle">เหนื่อยใช่มั้ยครับ? ลองเลือกรับพลังงานดีๆ ตรงนี้ดูนะ</p>
+
+        <div class="menu-grid">
+            <button class="heal-btn" onclick="heal('hug')">
+                <span>🤗 ขอกอดอุ่นๆ หน่อย</span>
+                <span>➔</span>
+            </button>
+            <button class="heal-btn" onclick="heal('cheer')">
+                <span>🌟 ขอกำลังใจหน่อยครับ</span>
+                <span>➔</span>
+            </button>
+            <button class="heal-btn" onclick="heal('food')">
+                <span>กวักมือพาไปกินของอร่อย</span>
+                <span>➔</span>
+            </button>
+        </div>
+
+        <button class="burst-btn" onclick="popHeart(event)">
+            💥 กดปุ่มนี้รัวๆ ปล่อยความเครียด! 💖
+        </button>
+
+        <div class="message-box" id="msgBox"></div>
+    </div>
 
     <script>
-        const heartContainer = document.getElementById('heart');
-        const textPhrase = "i love you";
-        const totalPoints = 50; // เพิ่มจำนวนตัวอักษรให้หัวใจแน่นและใหญ่ขึ้น
+        const messages = {
+            hug: [
+                "กอดๆๆๆ น้านคนเก่ง วันนี้เหนื่อยมาทั้งวันแล้ว พักผ่อนเยิ้มๆ นะครับ อ้อมกอดนี้พร้อมซัพพอร์ตเธอเสมอเลย 🫂💕",
+                "มากอดเค้าตรงนี้เลย! ทิ้งเรื่องเครียดไว้ข้างนอกก่อน แล้วมาซบไหล่ตรงนี้นะ 🥺✨"
+            ],
+            cheer: [
+                "เก่งที่สุดในโลกแล้วครับรู้มั้ย! ไม่มีใครทำได้ดีเท่าเธอแล้ว ยิ้มเยอะๆ น้า คนดีของเค้าสวยที่สุดตอนยิ้มนะ 😊💖",
+                "อย่าลืมนะว่าเธอไม่ได้อยู่คนเดียว เค้าคอยเชียร์และอยู่ข้างๆ เธอเสมอ ไม่ว่าจะเกิดอะไรขึ้นนะครับ ✌️✨"
+            ],
+            food: [
+                "เครียดหนักใช่ไหม! งั้นวันนี้ปล่อยใจเลย อยากกินชาบู บิงซู หรือชานมไข่มุก เดี๋ยวเค้าเปย์/พาไปกินเอง! 🍨🧋",
+                "ของอร่อยจะเยียวยาทุกอย่าง! เตรียมตัวไว้เลย เดี๋ยวพาไปหาของกินอร่อยๆ ให้หายเครียดครับ 🍰✨"
+            ]
+        };
 
-        // สร้างจุดตำแหน่งรูปหัวใจ
-        for (let i = 0; i < totalPoints; i++) {
-            const span = document.createElement('span');
-            span.className = 'text';
-            span.innerText = textPhrase;
+        const emojis = {
+            hug: '🫂',
+            cheer: '👑',
+            food: '🍰'
+        };
 
-            // หน่วงเวลาเอฟเฟกต์ไฟกระพริบให้เหลื่อมกัน จะเกิดเป็นระลอกคลื่นแสงวนไปเรื่อยๆ
-            span.style.animationDelay = `${(i / totalPoints) * 2}s`;
+        function heal(type) {
+            const box = document.getElementById('msgBox');
+            const avatar = document.getElementById('avatarEmoji');
+            
+            // สุ่มคำพูด
+            const list = messages[type];
+            const randomMsg = list[Math.floor(Math.random() * list.length)];
+            
+            avatar.innerText = emojis[type];
+            box.innerText = randomMsg;
+            box.style.display = 'block';
 
-            heartContainer.appendChild(span);
+            // พ่นอิโมจิเบาๆ
+            spawnEmoji(emojis[type], 8);
         }
 
-        // ฟังก์ชันคำนวณตำแหน่งและหมุนตามเวลา (ทำให้ตัวอักษรขยับเคลื่อนที่วนรอบหัวใจแบบอนันต์)
-        let angleOffset = 0;
-        function animateHeart() {
-            const spans = heartContainer.getElementsByTagName('span');
-            const scale = 15; // ปรับขนาดหัวใจให้ใหญ่ขึ้น
-
-            for (let i = 0; i < spans.length; i++) {
-                // เพิ่ม angleOffset เข้าไปเพื่อให้ตำแหน่งเคลื่อนที่หมุนวนไปเรื่อยๆ
-                const t = ((i / spans.length) * Math.PI * 2) + angleOffset;
+        // ปุ่มกดพ่นหัวใจระบายความเครียด
+        function popHeart(e) {
+            const heartList = ['💖', '✨', '🌸', '🧸', '☁️', '🍬', '🍀'];
+            for (let i = 0; i < 6; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-emoji';
+                el.innerText = heartList[Math.floor(Math.random() * heartList.length)];
                 
-                // สมการคณิตศาสตร์รูปหัวใจ
-                const x = 16 * Math.pow(Math.sin(t), 3);
-                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                // สุ่มตำแหน่งกระจายจากจุดที่คลิก
+                el.style.left = (e.clientX + (Math.random() * 80 - 40)) + 'px';
+                el.style.top = e.clientY + 'px';
+                
+                document.body.appendChild(el);
 
-                const posX = x * scale + 250;
-                const posY = y * scale + 250;
-
-                const angle = Math.atan2(y, x) * (180 / Math.PI);
-
-                spans[i].style.left = `${posX}px`;
-                spans[i].style.top = `${posY}px`;
-                spans[i].style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                setTimeout(() => el.remove(), 2000);
             }
-
-            // ความเร็วในการหมุนวิ่งรอบหัวใจ (วนลูปเรื่อยๆ)
-            angleOffset += 0.005; 
-
-            requestAnimationFrame(animateHeart);
         }
 
-        // เริ่มทำงานอนิเมชันแบบอนันต์
-        animateHeart();
-    </script>
+        function spawnEmoji(emoji, count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'floating-emoji';
+                    el.innerText = emoji;
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.top = '100vh';
+                    document.body.appendChild(el);
 
+                    setTimeout(() => el.remove(), 2000);
+                }, i * 100);
+            }
+        }
+    </script>
 </body>
 </html>
