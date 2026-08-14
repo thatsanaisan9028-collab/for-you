@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Love You Heart Forever</title>
+    <style>
+        body {
+            background-color: #050505;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .heart-wrapper {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* หัวใจเต้นพอง-ยุบแบบอนันต์ (infinite) */
+            animation: heartBeat 1.5s infinite ease-in-out;
+        }
+
+        .text {
+            position: absolute;
+            color: #ff69b4; /* สีชมพู */
+            font-weight: bold;
+            font-size: 15px;
+            white-space: nowrap;
+            text-shadow: 0 0 10px #ff1493, 0 0 20px #ff69b4, 0 0 30px #ff1493; /* แสง นีออน สว่างขึ้น */
+            /* เอฟเฟกต์ไฟกระพริบวิบวับวนลูปตลอดไป */
+            animation: glowPulse 2s infinite ease-in-out alternate;
+        }
+
+        /* จังหวะเต้นของหัวใจแบบวนลูปตลอดไป */
+        @keyframes heartBeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* จังหวะไฟกระพริบเรืองแสงวนลูปตลอดไป */
+        @keyframes glowPulse {
+            0% {
+                opacity: 0.7;
+                filter: drop-shadow(0 0 2px #ff69b4);
+            }
+            100% {
+                opacity: 1;
+                filter: drop-shadow(0 0 12px #ff1493);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="heart-wrapper" id="heart"></div>
+
+    <script>
+        const heartContainer = document.getElementById('heart');
+        const textPhrase = "i love you";
+        const totalPoints = 50; // เพิ่มจำนวนตัวอักษรให้หัวใจแน่นและใหญ่ขึ้น
+
+        // สร้างจุดตำแหน่งรูปหัวใจ
+        for (let i = 0; i < totalPoints; i++) {
+            const span = document.createElement('span');
+            span.className = 'text';
+            span.innerText = textPhrase;
+
+            // หน่วงเวลาเอฟเฟกต์ไฟกระพริบให้เหลื่อมกัน จะเกิดเป็นระลอกคลื่นแสงวนไปเรื่อยๆ
+            span.style.animationDelay = `${(i / totalPoints) * 2}s`;
+
+            heartContainer.appendChild(span);
+        }
+
+        // ฟังก์ชันคำนวณตำแหน่งและหมุนตามเวลา (ทำให้ตัวอักษรขยับเคลื่อนที่วนรอบหัวใจแบบอนันต์)
+        let angleOffset = 0;
+        function animateHeart() {
+            const spans = heartContainer.getElementsByTagName('span');
+            const scale = 15; // ปรับขนาดหัวใจให้ใหญ่ขึ้น
+
+            for (let i = 0; i < spans.length; i++) {
+                // เพิ่ม angleOffset เข้าไปเพื่อให้ตำแหน่งเคลื่อนที่หมุนวนไปเรื่อยๆ
+                const t = ((i / spans.length) * Math.PI * 2) + angleOffset;
+                
+                // สมการคณิตศาสตร์รูปหัวใจ
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+
+                const posX = x * scale + 250;
+                const posY = y * scale + 250;
+
+                const angle = Math.atan2(y, x) * (180 / Math.PI);
+
+                spans[i].style.left = `${posX}px`;
+                spans[i].style.top = `${posY}px`;
+                spans[i].style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            }
+
+            // ความเร็วในการหมุนวิ่งรอบหัวใจ (วนลูปเรื่อยๆ)
+            angleOffset += 0.005; 
+
+            requestAnimationFrame(animateHeart);
+        }
+
+        // เริ่มทำงานอนิเมชันแบบอนันต์
+        animateHeart();
+    </script>
+
+</body>
+</html>
