@@ -3,104 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ชื่อล่อซื้อ เลือกเปลี่ยนตรงนี้ให้เนียนที่สุด -->
-    <title>ไฟล์งานสำคัญ.pdf (ด่วน!) - OneDrive</title>
-    <!-- <title>รูปหลุดเธอ! (ดูด่วนก่อนลบ)</title> -->
+    <title>I Love You Heart</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #f0f2f5;
-            height: 100vh;
+            background-color: #0d0d0d;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
-            flex-direction: column;
         }
 
-        /* หน้าโหลดปลอมๆ ให้ดูเหมือนกำลังโหลดไฟล์ */
-        .loading-screen {
-            text-align: center;
-            z-index: 10;
+        .heart-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
         }
-        .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #3498db;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text { color: #555; font-size: 1.1rem; }
 
-        /* หน้าเฉลยตอนจบ (ซ่อนไว้ก่อน) */
-        .reveal-screen {
-            display: none;
-            text-align: center;
-            animation: popIn 0.5s ease;
-            z-index: 5;
-        }
-        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        
-        /* ใส่ URL รูปมีมตลกๆ ตรงนี้ (หรือใช้รูปแมวกวนๆ ที่ผมใส่ไว้) */
-        .meme-img {
-            max-width: 300px;
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
-        .reveal-text {
-            color: #2c3e50;
-            font-size: 2rem;
+        .text {
+            position: absolute;
+            color: #ff69b4; /* สีชมพู */
             font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+            text-shadow: 0 0 8px #ff1493, 0 0 15px #ff69b4; /* แสงเรืองรองสีชมพู */
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        /* เอฟเฟกต์หัวใจเต้นวิบวับ */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+                text-shadow: 0 0 12px #ff1493, 0 0 25px #ff69b4;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- หน้าโหลดปลอม -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loader"></div>
-        <p class="loading-text">กำลังโหลดไฟล์... กรุณารอครู่</p>
-    </div>
-
-    <!-- หน้าเฉลย -->
-    <div class="reveal-screen" id="revealScreen">
-        <!-- รูปมีมแมวกวนๆ (เปลี่ยน URL เป็นรูปอื่นได้ตามใจชอบ) -->
-        <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjN6OXE1ZnU1NXF3NTAwN3pxb3FnazVyamxwaWpzeDZ6NnF2eGszcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/C9x8gX02SnMIo/giphy.gif" alt="Meme" class="meme-img">
-        <p class="reveal-text">ก๊ากกก! โดนแกล้งแล้ว! 🤪</p>
-    </div>
+    <div class="heart-container" id="heart"></div>
 
     <script>
-        // ฟังก์ชันเริ่มแกล้ง
-        function startPrank() {
-            // ลำดับ Popup ข้อความกวนๆ (เพิ่ม/ลดได้)
-            alert("⚠️ คำเตือน: เครื่องคุณกำลังจะระเบิด!");
-            alert("ล้อเล่น... เครื่องคุณติดไวรัสหัวใจ!");
-            alert("กรุณากด OK เพื่อยืนยันว่าคุณหน้าตาดีกว่าคนส่ง...");
-            alert("อุ๊ย! กด OK อีกทีสิ");
-            alert("ครั้งสุดท้ายแล้ว... จริงๆ นะ");
-            alert("ก๊ากกกก! เชื่อคนง่ายจัง!");
+        const heartContainer = document.getElementById('heart');
+        const textPhrase = "i love you";
+        const totalPoints = 40; // จำนวนข้อความที่จะนำมาต่อเป็นรูปหัวใจ
 
-            // เฉลย
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('revealScreen').style.display = 'block';
+        // สมการคณิตศาสตร์สร้างรูปหัวใจ (Parametric Heart Equation)
+        for (let i = 0; i < totalPoints; i++) {
+            const t = (i / totalPoints) * Math.PI * 2;
+            
+            // สูตรตำแหน่ง X, Y ของรูปหัวใจ
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
 
-            // เปิดเสียงหัวเราะกวนๆ (เสียง default ของ browser)
-            // หมายเหตุ: บาง browser อาจบล็อกเสียงถ้าผู้ใช้ยังไม่ได้ปฏิสัมพันธ์กับหน้าเว็บ
-            const audio = new Audio('https://www.soundjay.com/human/laughter-2.mp3'); 
-            // หรือใช้ URL เสียงกวนๆ อื่นๆ เช่นเสียงเป็ด, เสียงขำกวนๆ
-            audio.play().catch(e => console.log("Audio play blocked by browser."));
+            // ปรับขนาดและตำแหน่งให้อยู่ตรงกลาง
+            const scale = 11;
+            const posX = x * scale + 175;
+            const posY = y * scale + 175;
+
+            // สร้าง Element ข้อความ
+            const span = document.createElement('span');
+            span.className = 'text';
+            span.innerText = textPhrase;
+            span.style.left = `${posX}px`;
+            span.style.top = `${posY}px`;
+
+            // หมุนตัวอักษรให้เอียงตามเส้นโค้งของหัวใจ
+            const angle = Math.atan2(y, x) * (180 / Math.PI);
+            span.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+
+            // สุ่มหน่วงเวลาลูกเล่นไฟกระพริบให้ดูมีมิติ
+            span.style.animationDelay = `${(i / totalPoints) * 2}s`;
+
+            heartContainer.appendChild(span);
         }
-
-        // เริ่มแกล้งหลังจากโหลดหน้าเว็บเสร็จ 2 วินาที (ให้ดูเนียนๆ)
-        window.onload = function() {
-            setTimeout(startPrank, 2000); 
-        };
     </script>
+
 </body>
 </html>
