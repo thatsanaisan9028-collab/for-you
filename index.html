@@ -1,90 +1,843 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I Love You Heart</title>
-    <style>
-        body {
-            background-color: #0d0d0d;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>กล้องพลังพิเศษ</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { margin: 0; height: 100%; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  #app { position: relative; width: 100vw; height: 100vh; height: 100dvh; background: #000; display: flex; flex-direction: column; }
+  #stage { position: relative; flex: 1; overflow: hidden; background: #000; }
+  video { display: none; }
+  canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); height: 100%; width: auto; max-width: none; }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 8; }
+  #flash.on { animation: flashpop .25s ease-out; }
+  @keyframes flashpop { 0% { opacity: .9; } 100% { opacity: 0; } }
 
-        .heart-container {
-            position: relative;
-            width: 350px;
-            height: 350px;
-        }
+  #countdownOverlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 9; pointer-events: none; }
+  #countdownNum { font-size: 130px; font-weight: 800; color: #fff; text-shadow: 0 0 30px rgba(255,255,255,0.85); opacity: 0; transform: scale(0.5); }
+  #countdownNum.show { animation: countPulse 1s ease-out; }
+  @keyframes countPulse { 0% { opacity: 0; transform: scale(0.4);} 30% { opacity: 1; transform: scale(1.15);} 100% { opacity: 0; transform: scale(1.4);} }
 
-        .text {
-            position: absolute;
-            color: #ff69b4; /* สีชมพู */
-            font-weight: bold;
-            font-size: 14px;
-            white-space: nowrap;
-            text-shadow: 0 0 8px #ff1493, 0 0 15px #ff69b4; /* แสงเรืองรองสีชมพู */
-            animation: pulse 2s infinite ease-in-out;
-        }
+  #statusPill { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); color: #fff; font-size: 12px; padding: 6px 14px; border-radius: 20px; opacity: 0; transition: opacity .3s; pointer-events: none; letter-spacing: .3px; white-space: nowrap; z-index: 7; max-width: 82%; text-align:center; }
+  #statusPill.show { opacity: 1; }
 
-        /* เอฟเฟกต์หัวใจเต้นวิบวับ */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 0.9;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 1;
-                text-shadow: 0 0 12px #ff1493, 0 0 25px #ff69b4;
-            }
-        }
-    </style>
+  #topBar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top)); z-index: 5; }
+  .iconBtn { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.35); color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+  .iconBtn:active { background: rgba(255,255,255,0.25); }
+  .iconBtn.toggled { background: #ff2d55; }
+
+  #downloadLink { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); color: #000; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-decoration: none; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 6; }
+  #downloadLink.show { opacity: 1; pointer-events: auto; }
+
+  #toggleStrip { position: absolute; bottom: 172px; left: 0; right: 0; display: flex; gap: 8px; overflow-x: auto; padding: 4px 16px; scrollbar-width: none; z-index: 5; }
+  #toggleStrip::-webkit-scrollbar { display: none; }
+  .toggleChip { flex: 0 0 auto; padding: 8px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4); color: #fff; font-size: 12.5px; backdrop-filter: blur(6px); font-weight: 600; }
+  .toggleChip.active { background: linear-gradient(90deg,#ff5f6d,#ffc371); border-color: transparent; color:#000; }
+
+  #filterStrip { position: absolute; bottom: 128px; left: 0; right: 0; display: flex; gap: 10px; overflow-x: auto; padding: 6px 16px 4px; scrollbar-width: none; z-index: 5; }
+  #filterStrip::-webkit-scrollbar { display: none; }
+  .filterChip { flex: 0 0 auto; padding: 7px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.35); color: rgba(255,255,255,0.85); font-size: 12.5px; backdrop-filter: blur(6px); }
+  .filterChip.active { background: #fff; color: #000; border-color: #fff; font-weight: 600; }
+
+  #bottomBar { position: relative; height: 118px; padding-bottom: env(safe-area-inset-bottom); display: flex; align-items: center; justify-content: space-between; padding-left: 34px; padding-right: 34px; background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0)); z-index: 5; }
+  #thumbBtn { width: 46px; height: 46px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.6); background: #222 center/cover no-repeat; padding: 0; }
+  #shutterBtn { width: 74px; height: 74px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,0.35); padding: 0; box-shadow: 0 0 0 3px rgba(255,255,255,0.9) inset; }
+  #shutterBtn:active { transform: scale(0.92); }
+  #shutterBtn.off, #shutterBtn:disabled { opacity: 0.35; pointer-events: none; }
+  #switchBtn { width: 46px; height: 46px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+  #switchBtn:active { background: rgba(255,255,255,0.3); }
+
+  #offOverlay { position: absolute; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 10; color: rgba(255,255,255,0.7); font-size: 14px; }
+  #offOverlay.show { display: flex; }
+  #turnOnBtn { padding: 12px 28px; border-radius: 24px; border: none; background: #fff; color: #000; font-size: 15px; font-weight: 600; }
+</style>
 </head>
 <body>
 
-    <div class="heart-container" id="heart"></div>
+<div id="app">
+  <div id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="flash"></div>
+    <div id="countdownOverlay"><div id="countdownNum"></div></div>
+    <div id="statusPill">กำลังเปิดกล้อง...</div>
 
-    <script>
-        const heartContainer = document.getElementById('heart');
-        const textPhrase = "i love you";
-        const totalPoints = 40; // จำนวนข้อความที่จะนำมาต่อเป็นรูปหัวใจ
+    <div id="topBar">
+      <button class="iconBtn" id="stopBtn" title="ปิดกล้อง">⏻</button>
+      <a id="downloadLink" download="photo.png">บันทึกรูปแล้ว ⬇️</a>
+      <button class="iconBtn" id="timerBtn" title="ตั้งเวลาถ่าย">⏱</button>
+    </div>
 
-        // สมการคณิตศาสตร์สร้างรูปหัวใจ (Parametric Heart Equation)
-        for (let i = 0; i < totalPoints; i++) {
-            const t = (i / totalPoints) * Math.PI * 2;
-            
-            // สูตรตำแหน่ง X, Y ของรูปหัวใจ
-            const x = 16 * Math.pow(Math.sin(t), 3);
-            const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+    <div id="offOverlay">
+      <div style="font-size:34px;">📷</div>
+      <div>กล้องปิดอยู่</div>
+      <button id="turnOnBtn">เปิดกล้อง</button>
+    </div>
+  </div>
 
-            // ปรับขนาดและตำแหน่งให้อยู่ตรงกลาง
-            const scale = 11;
-            const posX = x * scale + 175;
-            const posY = y * scale + 175;
+  <div id="toggleStrip">
+    <button class="toggleChip" data-toggle="ghost">👥 แยกร่าง</button>
+    <button class="toggleChip" data-toggle="hand">✋⚡ พลังมือ</button>
+  </div>
 
-            // สร้าง Element ข้อความ
-            const span = document.createElement('span');
-            span.className = 'text';
-            span.innerText = textPhrase;
-            span.style.left = `${posX}px`;
-            span.style.top = `${posY}px`;
+  <div id="filterStrip">
+    <button class="filterChip active" data-filter="none">ปกติ</button>
+    <button class="filterChip" data-filter="grayscale">ขาวดำ</button>
+    <button class="filterChip" data-filter="sepia">Sepia</button>
+    <button class="filterChip" data-filter="invert">Invert</button>
+    <button class="filterChip" data-filter="blur">เบลอ</button>
+    <button class="filterChip" data-filter="bright">สว่างจ้า</button>
+    <button class="filterChip" data-filter="contrast">คอนทราสต์</button>
+    <button class="filterChip" data-filter="hue">สลับสี</button>
+    <button class="filterChip" data-filter="posterize">โพสเทอไรซ์</button>
+    <button class="filterChip" data-filter="thermal">ความร้อน</button>
+    <button class="filterChip" data-filter="sketch">ภาพร่าง</button>
+    <button class="filterChip" data-filter="pixelate">พิกเซล</button>
+    <button class="filterChip" data-filter="vhs">VHS/กลิทช์</button>
+    <button class="filterChip" data-filter="night">มองกลางคืน</button>
+    <button class="filterChip" data-filter="neon">นีออน</button>
+    <button class="filterChip" data-filter="oldfilm">หนังเก่า</button>
+    <button class="filterChip" data-filter="matrix">เมทริกซ์</button>
+    <button class="filterChip" data-filter="rainbow">เรนโบว์</button>
+    <button class="filterChip" data-filter="kaleido">กระจกคู่</button>
+    <button class="filterChip" data-filter="cartoon">การ์ตูน</button>
+    <button class="filterChip" data-filter="snow">หิมะ</button>
+    <button class="filterChip" data-filter="fire">ไฟลุก</button>
+    <button class="filterChip" data-filter="galaxy">กาแล็กซี่</button>
+    <button class="filterChip" data-filter="rain">ฝนตก</button>
+  </div>
 
-            // หมุนตัวอักษรให้เอียงตามเส้นโค้งของหัวใจ
-            const angle = Math.atan2(y, x) * (180 / Math.PI);
-            span.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+  <div id="bottomBar">
+    <button id="thumbBtn"></button>
+    <button id="shutterBtn"></button>
+    <button id="switchBtn">🔄</button>
+  </div>
+</div>
 
-            // สุ่มหน่วงเวลาลูกเล่นไฟกระพริบให้ดูมีมิติ
-            span.style.animationDelay = `${(i / totalPoints) * 2}s`;
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const chips = document.querySelectorAll('.filterChip');
+const toggleChips = document.querySelectorAll('.toggleChip');
+const shutterBtn = document.getElementById('shutterBtn');
+const switchBtn = document.getElementById('switchBtn');
+const stopBtn = document.getElementById('stopBtn');
+const turnOnBtn = document.getElementById('turnOnBtn');
+const offOverlay = document.getElementById('offOverlay');
+const statusPill = document.getElementById('statusPill');
+const flashEl = document.getElementById('flash');
+const downloadLink = document.getElementById('downloadLink');
+const thumbBtn = document.getElementById('thumbBtn');
+const timerBtn = document.getElementById('timerBtn');
+const countdownNum = document.getElementById('countdownNum');
 
-            heartContainer.appendChild(span);
+let currentFilter = 'none';
+let facingMode = 'user';
+let stream = null;
+let rafId = null;
+let frameCount = 0;
+
+let ghostEnabled = false;
+let handEnabled = false;
+
+const timerOptions = [0,3,10];
+let timerIdx = 0;
+let timerSec = 0;
+
+const filters = {
+  none:'none', grayscale:'grayscale(1)', sepia:'sepia(1)', invert:'invert(1)',
+  blur:'blur(4px)', bright:'brightness(1.6) saturate(1.3)', contrast:'contrast(2)'
+};
+
+function showStatus(msg, autoHide){
+  statusPill.textContent = msg;
+  statusPill.classList.add('show');
+  if (autoHide){
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(()=>statusPill.classList.remove('show'), 2200);
+  }
+}
+
+/* ================= camera lifecycle ================= */
+async function startCamera(){
+  stopCamera();
+  offOverlay.classList.remove('show');
+  shutterBtn.classList.remove('off');
+  showStatus('กำลังเปิดกล้อง...');
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width:{ideal:640}, height:{ideal:480} },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    setupWorkCanvas();
+    statusPill.classList.remove('show');
+    draw();
+  }catch(err){
+    showStatus('เปิดกล้องไม่ได้');
+    offOverlay.classList.add('show');
+    alert('เปิดกล้องไม่ได้: ' + err.message + '\n\nเช็คว่า: 1) เปิดผ่าน https หรือ localhost 2) อนุญาตสิทธิ์กล้อง 3) ไม่มีแอพอื่นใช้กล้องอยู่');
+  }
+}
+function stopCamera(){
+  if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  if (stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  video.srcObject = null;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function fullStop(){
+  stopCamera();
+  offOverlay.classList.add('show');
+  shutterBtn.classList.add('off');
+  statusPill.classList.remove('show');
+}
+
+/* ================= offscreen work canvas ================= */
+let workCanvas, workCtx, WW=160, WH=120;
+function setupWorkCanvas(){
+  workCanvas = document.createElement('canvas');
+  workCanvas.width = WW; workCanvas.height = WH;
+  workCtx = workCanvas.getContext('2d');
+}
+
+/* ================= แยกร่าง: เรียงแถวยืนข้างกัน ขนาดเท่ากันทุกร่าง ================= */
+const CLONE_COUNT = 5;
+const CLONE_HUES = [0, 72, 144, 216, 288];
+function drawCloneRow(w,h){
+  if (!video.videoWidth) return;
+  const n = CLONE_COUNT;
+  const slotW = w / n;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const dstAspect = slotW / h;
+  const srcAspect = vw / vh;
+  let sx, sy, sw, sh;
+  if (srcAspect > dstAspect){ sh = vh; sw = vh * dstAspect; sx = (vw - sw) / 2; sy = 0; }
+  else { sw = vw; sh = vw / dstAspect; sx = 0; sy = (vh - sh) / 2; }
+
+  for (let i = 0; i < n; i++){
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(i * slotW, 0, slotW, h);
+    ctx.clip();
+    ctx.filter = 'hue-rotate(' + CLONE_HUES[i] + 'deg) saturate(1.35) brightness(1.03)';
+    ctx.drawImage(video, sx, sy, sw, sh, i * slotW, 0, slotW, h);
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < n; i++){
+    ctx.beginPath(); ctx.moveTo(i * slotW, 0); ctx.lineTo(i * slotW, h); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ================= pixel-based filters ================= */
+function processPosterize(id, levels){
+  levels = levels || 4;
+  const step = 255/(levels-1);
+  const d = id.data;
+  for (let i=0;i<d.length;i+=4){
+    d[i]   = Math.round(Math.round(d[i]/step)*step);
+    d[i+1] = Math.round(Math.round(d[i+1]/step)*step);
+    d[i+2] = Math.round(Math.round(d[i+2]/step)*step);
+  }
+  return id;
+}
+function processThermal(id){
+  const d = id.data;
+  for (let i=0;i<d.length;i+=4){
+    const lum = (d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114)/255;
+    let r,g,b;
+    if (lum < 0.33){ r=0; g=Math.round(lum/0.33*255); b=255-g; }
+    else if (lum < 0.66){ const t=(lum-0.33)/0.33; r=Math.round(t*255); g=255; b=0; }
+    else { const t=(lum-0.66)/0.34; r=255; g=Math.round(255-t*255); b=0; }
+    d[i]=r; d[i+1]=g; d[i+2]=b;
+  }
+  return id;
+}
+function edgeMap(gray, w, h){
+  const edge = new Float32Array(w*h);
+  for (let y=1;y<h-1;y++){
+    for (let x=1;x<w-1;x++){
+      const p = y*w+x;
+      const gx = gray[p-1]-gray[p+1];
+      const gy = gray[p-w]-gray[p+w];
+      edge[p] = Math.sqrt(gx*gx+gy*gy);
+    }
+  }
+  return edge;
+}
+function toGray(d, w, h){
+  const gray = new Float32Array(w*h);
+  for (let i=0,p=0;i<d.length;i+=4,p++) gray[p] = d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114;
+  return gray;
+}
+function processSketch(id){
+  const d = id.data, w = id.width, h = id.height;
+  const gray = toGray(d,w,h);
+  const edge = edgeMap(gray,w,h);
+  for (let p=0;p<gray.length;p++){
+    const v = 255 - Math.min(255, edge[p]*2.2);
+    const o = p*4;
+    d[o]=d[o+1]=d[o+2]=v;
+  }
+  return id;
+}
+function processCartoon(id){
+  const d = id.data, w = id.width, h = id.height;
+  const grayForEdge = toGray(d,w,h);
+  const edge = edgeMap(grayForEdge,w,h);
+  processPosterize(id, 5);
+  for (let p=0;p<grayForEdge.length;p++){
+    if (edge[p] > 40){
+      const o = p*4;
+      d[o]=d[o+1]=d[o+2]=0;
+    }
+  }
+  return id;
+}
+
+/* particle-overlay effects state */
+let snowFlakes = null, rainDrops = null, embers = null, stars = null;
+function ensureSnow(w,h){ if(!snowFlakes) snowFlakes = Array.from({length:60},()=>({x:Math.random()*w,y:Math.random()*h,r:1.5+Math.random()*2.5,sp:0.6+Math.random()*1.4,dr:Math.random()*2-1})); }
+function ensureRain(w,h){ if(!rainDrops) rainDrops = Array.from({length:80},()=>({x:Math.random()*w,y:Math.random()*h,len:14+Math.random()*14,sp:9+Math.random()*8})); }
+function ensureEmbers(w,h){ if(!embers) embers = Array.from({length:40},()=>({x:Math.random()*w,y:h+Math.random()*h,r:1+Math.random()*2.5,sp:0.8+Math.random()*1.8,drift:Math.random()*1.4-0.7})); }
+function ensureStars(w,h){ if(!stars) stars = Array.from({length:70},()=>({x:Math.random()*w,y:Math.random()*h,r:0.6+Math.random()*1.6,ph:Math.random()*Math.PI*2})); }
+
+/* ================= main frame draw dispatcher ================= */
+function drawFilteredFrame(){
+  const w = canvas.width, h = canvas.height;
+
+  if (currentFilter === 'pixelate'){
+    const scale = 0.06;
+    const sw = Math.max(4, Math.round(w*scale)), sh = Math.max(4, Math.round(h*scale));
+    workCtx.canvas.width = sw; workCtx.canvas.height = sh;
+    workCtx.drawImage(video, 0, 0, sw, sh);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(workCtx.canvas, 0, 0, w, h);
+    ctx.imageSmoothingEnabled = true;
+    return;
+  }
+  if (currentFilter === 'posterize' || currentFilter === 'thermal' || currentFilter === 'sketch' || currentFilter === 'cartoon'){
+    workCanvas.width = WW; workCanvas.height = WH;
+    workCtx.drawImage(video, 0, 0, WW, WH);
+    let id = workCtx.getImageData(0,0,WW,WH);
+    if (currentFilter === 'posterize') id = processPosterize(id,4);
+    else if (currentFilter === 'thermal') id = processThermal(id);
+    else if (currentFilter === 'sketch') id = processSketch(id);
+    else if (currentFilter === 'cartoon') id = processCartoon(id);
+    workCtx.putImageData(id, 0, 0);
+    ctx.imageSmoothingEnabled = currentFilter !== 'cartoon';
+    ctx.drawImage(workCanvas, 0, 0, w, h);
+    ctx.imageSmoothingEnabled = true;
+    return;
+  }
+  if (currentFilter === 'kaleido'){
+    const vw = video.videoWidth, vh = video.videoHeight, halfW = w/2;
+    ctx.drawImage(video, 0,0, vw/2, vh, 0,0, halfW, h);
+    ctx.save();
+    ctx.translate(w,0); ctx.scale(-1,1);
+    ctx.drawImage(video, 0,0, vw/2, vh, 0,0, halfW, h);
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'vhs'){
+    ctx.filter = 'contrast(1.15) saturate(1.4)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    for (let i=0;i<6;i++){
+      const y = Math.random()*h;
+      const sh2 = 6 + Math.random()*18;
+      const shift = (Math.random()-0.5)*20;
+      ctx.drawImage(video, 0, y, w, sh2, shift, y, w, sh2);
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#ff2d55'; ctx.fillRect(3,0,w,h);
+    ctx.fillStyle = '#00e5ff'; ctx.fillRect(-3,0,w,h);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = 0.12; ctx.fillStyle = '#000';
+    for (let y=0;y<h;y+=3) ctx.fillRect(0,y,w,1);
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'night'){
+    ctx.filter = 'brightness(1.7) contrast(1.3) saturate(2) sepia(0.3) hue-rotate(60deg)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ctx.save();
+    ctx.globalAlpha = 0.15 + Math.random()*0.08;
+    ctx.fillStyle = '#88ff88';
+    for (let i=0;i<80;i++) ctx.fillRect(Math.random()*w, Math.random()*h, 1.5, 1.5);
+    ctx.restore();
+    const grad = ctx.createRadialGradient(w/2,h/2,h*0.25,w/2,h/2,h*0.7);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(1,'rgba(0,20,0,0.65)');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+    return;
+  }
+  if (currentFilter === 'neon'){
+    ctx.filter = 'saturate(2.4) contrast(1.5) brightness(0.9)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'blur(6px) saturate(3) hue-rotate(' + ((frameCount*3)%360) + 'deg) brightness(1.4)';
+    ctx.globalCompositeOperation = 'screen';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.filter = 'none';
+    return;
+  }
+  if (currentFilter === 'oldfilm'){
+    ctx.filter = 'sepia(0.6) contrast(1.2) brightness(' + (0.95+Math.random()*0.1) + ')';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ctx.save();
+    ctx.globalAlpha = 0.1; ctx.fillStyle = '#fff';
+    for (let i=0;i<120;i++) ctx.fillRect(Math.random()*w, Math.random()*h, 1, 1);
+    ctx.restore();
+    const grad = ctx.createRadialGradient(w/2,h/2,h*0.3,w/2,h/2,h*0.75);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(1,'rgba(0,0,0,0.6)');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+    return;
+  }
+  if (currentFilter === 'matrix'){
+    ctx.filter = 'grayscale(1) brightness(0.6) contrast(1.3)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,10,0,0.35)'; ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'lighten';
+    drawMatrixRain(w,h);
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'hue'){
+    ctx.filter = 'hue-rotate(' + ((frameCount*4)%360) + 'deg) saturate(1.5)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    return;
+  }
+  if (currentFilter === 'rainbow'){
+    ctx.filter = 'saturate(0.9) contrast(1.05)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, (frameCount*3)%h - h, w, (frameCount*3)%h);
+    const hues = [0,60,120,180,240,300,360];
+    hues.forEach((hv,i)=>grad.addColorStop(i/(hues.length-1), 'hsl('+hv+',100%,60%)'));
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'snow'){
+    ctx.filter = 'brightness(0.95) saturate(0.85)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ensureSnow(w,h);
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    snowFlakes.forEach(f => {
+      f.y += f.sp; f.x += Math.sin(f.y*0.02)*f.dr*0.3;
+      if (f.y > h){ f.y = -5; f.x = Math.random()*w; }
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'rain'){
+    ctx.filter = 'brightness(0.8) contrast(1.15) saturate(0.8)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ensureRain(w,h);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(180,210,255,0.55)';
+    ctx.lineWidth = 2;
+    rainDrops.forEach(r => {
+      r.y += r.sp;
+      if (r.y > h){ r.y = -20; r.x = Math.random()*w; }
+      ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x-3, r.y+r.len); ctx.stroke();
+    });
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'fire'){
+    ctx.filter = 'contrast(1.2) saturate(1.3) sepia(0.25)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ensureEmbers(w,h);
+    ctx.save();
+    const grad = ctx.createLinearGradient(0,h,0,h*0.4);
+    grad.addColorStop(0,'rgba(255,90,0,0.55)');
+    grad.addColorStop(1,'rgba(255,90,0,0)');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'screen';
+    embers.forEach(e => {
+      e.y -= e.sp; e.x += e.drift;
+      if (e.y < 0){ e.y = h; e.x = Math.random()*w; }
+      const g2 = ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.r*3);
+      g2.addColorStop(0,'rgba(255,200,80,0.9)');
+      g2.addColorStop(1,'rgba(255,120,0,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r*3, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+    return;
+  }
+  if (currentFilter === 'galaxy'){
+    ctx.filter = 'brightness(0.55) contrast(1.25) saturate(1.4) hue-rotate(220deg)';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+    ensureStars(w,h);
+    ctx.save();
+    const neb = ctx.createRadialGradient(w*0.3,h*0.3,0,w*0.3,h*0.3,h*0.9);
+    neb.addColorStop(0,'rgba(120,60,200,0.28)');
+    neb.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = neb; ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'lighten';
+    ctx.fillStyle = '#fff';
+    stars.forEach(s => {
+      const tw = 0.4 + 0.6*Math.abs(Math.sin(frameCount*0.05 + s.ph));
+      ctx.globalAlpha = tw;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+    return;
+  }
+  ctx.filter = filters[currentFilter] || 'none';
+  ctx.drawImage(video, 0, 0, w, h);
+  ctx.filter = 'none';
+}
+
+let matrixCols = null;
+function drawMatrixRain(w,h){
+  const fontSize = Math.max(10, Math.round(w/28));
+  if (!matrixCols || matrixCols.length !== Math.floor(w/fontSize)){
+    const n = Math.floor(w/fontSize);
+    matrixCols = new Array(n).fill(0).map(()=> Math.random()*h);
+  }
+  ctx.font = fontSize + 'px monospace';
+  ctx.fillStyle = '#39ff6a';
+  const chars = 'アイウエオカキクケコ0123456789';
+  matrixCols.forEach((y, i) => {
+    const ch = chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(ch, i*fontSize, y);
+    matrixCols[i] = y > h ? 0 : y + fontSize;
+  });
+}
+
+/* ================= hand power ("พลังมือ") ================= */
+let handsModel = null, handsBusy = false;
+let latestHandResults = null;
+let particles = [];
+let shockwaves = [];
+let handOpenStart = [null, null];
+let lastGesture = [null, null];
+let lastHandSize = [null, null];
+let beamChargeStart = null;
+
+function loadHandsLib(cb){
+  if (window.Hands){ cb(); return; }
+  showStatus('กำลังโหลดระบบตรวจจับมือ...');
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js';
+  s.crossOrigin = 'anonymous';
+  s.onload = () => cb();
+  s.onerror = () => { showStatus('โหลดระบบตรวจจับมือไม่สำเร็จ (เช็คอินเทอร์เน็ต)', true); handEnabled = false; document.querySelector('[data-toggle="hand"]').classList.remove('active'); };
+  document.head.appendChild(s);
+}
+function initHandsModel(){
+  handsModel = new Hands({ locateFile: (f) => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f });
+  handsModel.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+  handsModel.onResults((res) => { latestHandResults = res; handsBusy = false; });
+  showStatus('กางฝ่ามือ=ออร่า | ชู2นิ้ว=เลเซอร์ | ชี้นิ้ว=คทา | กำปั้นพุ่ง=คลื่นกระแทก | โป้งขึ้น=ประกายดาว', true);
+}
+function feedHands(){
+  if (!handsModel || handsBusy || !video.videoWidth) return;
+  handsBusy = true;
+  handsModel.send({ image: video }).catch(()=>{ handsBusy = false; });
+}
+function dist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+function fingerUp(lm,tip,pip){ return lm[tip].y < lm[pip].y - 0.02; }
+function classifyGesture(lm){
+  const i=fingerUp(lm,8,6), m=fingerUp(lm,12,10), r=fingerUp(lm,16,14), p=fingerUp(lm,20,18);
+  const wrist = lm[0];
+  const thumbExt = dist(lm[4],wrist) > dist(lm[3],wrist) * 1.15;
+  if (i && m && r && p) return 'open';
+  if (!i && !m && !r && !p) return thumbExt ? 'thumbsup' : 'fist';
+  if (i && m && !r && !p) return 'peace';
+  if (i && !m && !r && !p) return 'point';
+  return 'other';
+}
+
+function spawnBurst(x,y,color,count){
+  count = count || 26;
+  for (let i=0;i<count;i++){
+    const ang = Math.random()*Math.PI*2, sp = 2+Math.random()*5;
+    particles.push({ x,y, vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp, life:1, color });
+  }
+}
+function updateParticles(){
+  particles.forEach(p => { p.x+=p.vx*0.01; p.y+=p.vy*0.01; p.vx*=0.96; p.vy*=0.96; p.life -= 0.025; });
+  particles = particles.filter(p => p.life > 0);
+}
+function drawParticles(w,h){
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(p.life,0);
+    ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(p.x*w, p.y*h, 3.5*p.life+1, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+function spawnShockwave(x,y,color){ shockwaves.push({x,y,radius:0.02,life:1,color}); }
+function updateDrawShockwaves(w,h){
+  shockwaves.forEach(s => { s.radius += 0.018; s.life -= 0.03; });
+  shockwaves = shockwaves.filter(s => s.life > 0);
+  shockwaves.forEach(s => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(s.life,0);
+    ctx.strokeStyle = s.color; ctx.lineWidth = 6*s.life+2;
+    ctx.shadowColor = s.color; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(s.x*w, s.y*h, s.radius*w, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawHandPower(){
+  const w = canvas.width, h = canvas.height;
+  updateParticles();
+  drawParticles(w,h);
+  updateDrawShockwaves(w,h);
+
+  if (!latestHandResults || !latestHandResults.multiHandLandmarks || latestHandResults.multiHandLandmarks.length === 0){
+    handOpenStart = [null,null]; lastGesture=[null,null]; lastHandSize=[null,null];
+    return;
+  }
+  const hands = latestHandResults.multiHandLandmarks;
+  const openPalms = [];
+
+  hands.forEach((lm, idx) => {
+    const wrist = lm[0], midMcp = lm[9];
+    const handSize = dist(wrist, midMcp) || 0.05;
+    const palm = { x:(wrist.x+midMcp.x)/2, y:(wrist.y+midMcp.y)/2 };
+    const gesture = classifyGesture(lm);
+    const hue = (frameCount*4 + idx*180) % 360;
+    const color = 'hsl(' + hue + ',100%,60%)';
+
+    if (gesture === 'open'){
+      openPalms.push(palm);
+      if (handOpenStart[idx] == null) handOpenStart[idx] = frameCount;
+      const heldFrames = frameCount - handOpenStart[idx];
+      const chargeRatio = Math.min(1, heldFrames/45);
+      const radius = (0.05 + chargeRatio*0.09) * w;
+      ctx.save();
+      const grad = ctx.createRadialGradient(palm.x*w, palm.y*h, 2, palm.x*w, palm.y*h, radius);
+      grad.addColorStop(0, 'hsla(' + hue + ',100%,80%,0.9)');
+      grad.addColorStop(0.5, 'hsla(' + hue + ',100%,55%,0.45)');
+      grad.addColorStop(1, 'hsla(' + hue + ',100%,50%,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(palm.x*w, palm.y*h, radius, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      if (Math.random() < 0.6) spawnBurst(palm.x, palm.y, color, 3);
+      if (heldFrames > 0 && heldFrames % 45 === 0){
+        spawnBurst(palm.x, palm.y, color, 30);
+        flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+      }
+    } else {
+      handOpenStart[idx] = null;
+    }
+
+    if (gesture === 'fist'){
+      ctx.save();
+      const pulse = 0.02 + 0.008*Math.sin(frameCount*0.4);
+      const grad = ctx.createRadialGradient(palm.x*w, palm.y*h, 1, palm.x*w, palm.y*h, pulse*w);
+      grad.addColorStop(0, 'hsla(' + hue + ',100%,75%,0.85)');
+      grad.addColorStop(1, 'hsla(' + hue + ',100%,50%,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(palm.x*w, palm.y*h, pulse*w, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      if (lastHandSize[idx] != null && (handSize - lastHandSize[idx]) > 0.035){
+        spawnShockwave(palm.x, palm.y, color);
+        spawnBurst(palm.x, palm.y, color, 20);
+        flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+      }
+    }
+
+    if (gesture === 'peace'){
+      [[8,6],[12,10]].forEach(([tipI,pipI]) => {
+        const tip = lm[tipI], pip = lm[pipI];
+        let dx = tip.x-pip.x, dy = tip.y-pip.y;
+        const len = Math.sqrt(dx*dx+dy*dy) || 0.001;
+        dx/=len; dy/=len;
+        const endX = tip.x + dx*1.4, endY = tip.y + dy*1.4;
+        ctx.save();
+        ctx.strokeStyle = color; ctx.lineWidth = 4;
+        ctx.shadowColor = color; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.moveTo(tip.x*w, tip.y*h); ctx.lineTo(endX*w, endY*h); ctx.stroke();
+        ctx.restore();
+        if (Math.random() < 0.7){
+          const t = Math.random();
+          spawnBurst(tip.x + (endX-tip.x)*t, tip.y + (endY-tip.y)*t, color, 2);
         }
-    </script>
+      });
+    }
 
+    if (gesture === 'point'){
+      const tip = lm[8];
+      ctx.save();
+      ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(tip.x*w, tip.y*h, 6, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      spawnBurst(tip.x, tip.y, color, 2);
+    }
+
+    if (gesture === 'thumbsup'){
+      if (lastGesture[idx] !== 'thumbsup'){
+        spawnBurst(palm.x, palm.y, '#ffd23f', 40);
+        spawnBurst(palm.x, palm.y, '#ff5f6d', 20);
+        flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+      } else if (Math.random() < 0.3){
+        spawnBurst(palm.x, palm.y, '#ffd23f', 2);
+      }
+    }
+
+    lastGesture[idx] = gesture;
+    lastHandSize[idx] = handSize;
+  });
+
+  if (openPalms.length === 2 && dist(openPalms[0], openPalms[1]) < 0.6){
+    if (beamChargeStart == null) beamChargeStart = frameCount;
+    const held = frameCount - beamChargeStart;
+    const a = openPalms[0], b = openPalms[1];
+    ctx.save();
+    const beamHue = (frameCount*6)%360;
+    ctx.strokeStyle = 'hsl(' + beamHue + ',100%,65%)';
+    ctx.lineWidth = Math.min(3 + held*0.15, 12);
+    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.moveTo(a.x*w, a.y*h);
+    const segs = 6;
+    for (let i=1;i<segs;i++){
+      const t = i/segs;
+      const mx = a.x + (b.x-a.x)*t + (Math.random()-0.5)*0.03;
+      const my = a.y + (b.y-a.y)*t + (Math.random()-0.5)*0.03;
+      ctx.lineTo(mx*w, my*h);
+    }
+    ctx.lineTo(b.x*w, b.y*h); ctx.stroke();
+    ctx.restore();
+    if (Math.random() < 0.5) spawnBurst(a.x+(b.x-a.x)*Math.random(), a.y+(b.y-a.y)*Math.random(), '#fff', 2);
+  } else {
+    beamChargeStart = null;
+  }
+}
+
+/* ================= main loop ================= */
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  if (facingMode === 'user'){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  if (video.readyState >= 2){
+    if (ghostEnabled) drawCloneRow(canvas.width, canvas.height);
+    else drawFilteredFrame();
+  }
+  if (handEnabled && handsModel) drawHandPower();
+  ctx.restore();
+  if (handEnabled && frameCount % 2 === 0) feedHands();
+  frameCount++;
+  rafId = requestAnimationFrame(draw);
+}
+
+/* ================= timer / countdown ================= */
+function runCountdown(seconds, onDone){
+  let n = seconds;
+  function tick(){
+    if (n <= 0){ onDone(); return; }
+    countdownNum.textContent = n;
+    countdownNum.classList.remove('show');
+    void countdownNum.offsetWidth;
+    countdownNum.classList.add('show');
+    n--;
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+timerBtn.addEventListener('click', () => {
+  timerIdx = (timerIdx+1) % timerOptions.length;
+  timerSec = timerOptions[timerIdx];
+  timerBtn.textContent = timerSec === 0 ? '⏱' : ('⏱' + timerSec);
+  timerBtn.classList.toggle('toggled', timerSec > 0);
+  showStatus(timerSec === 0 ? 'ปิดตั้งเวลาถ่าย' : ('ตั้งเวลาถ่าย ' + timerSec + ' วินาที'), true);
+});
+
+/* ================= UI events ================= */
+chips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    chips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+  });
+});
+toggleChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const type = chip.dataset.toggle;
+    if (type === 'ghost'){
+      ghostEnabled = !ghostEnabled;
+      chip.classList.toggle('active', ghostEnabled);
+      if (ghostEnabled) showStatus('แยกร่างแล้ว! ยืนตรงกลางจอ จะเห็นแถวโคลนข้างกัน 👥', true);
+    } else if (type === 'hand'){
+      handEnabled = !handEnabled;
+      chip.classList.toggle('active', handEnabled);
+      if (handEnabled){
+        if (!window.Hands) loadHandsLib(() => initHandsModel());
+        else if (!handsModel) initHandsModel();
+        else showStatus('เปิดพลังมือแล้ว ✋⚡', true);
+      } else {
+        latestHandResults = null; particles = []; shockwaves = [];
+        statusPill.classList.remove('show');
+      }
+    }
+  });
+});
+switchBtn.addEventListener('click', () => {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  startCamera();
+});
+stopBtn.addEventListener('click', fullStop);
+turnOnBtn.addEventListener('click', startCamera);
+
+function capturePhoto(){
+  const shot = document.createElement('canvas');
+  shot.width = canvas.width; shot.height = canvas.height;
+  shot.getContext('2d').drawImage(canvas, 0, 0);
+  const dataUrl = shot.toDataURL('image/png');
+  flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+  downloadLink.href = dataUrl;
+  downloadLink.classList.add('show');
+  clearTimeout(downloadLink._t);
+  downloadLink._t = setTimeout(() => downloadLink.classList.remove('show'), 2500);
+  thumbBtn.style.backgroundImage = 'url(' + dataUrl + ')';
+}
+shutterBtn.addEventListener('click', () => {
+  if (!stream) return;
+  if (timerSec > 0){
+    shutterBtn.disabled = true;
+    runCountdown(timerSec, () => { capturePhoto(); shutterBtn.disabled = false; });
+  } else {
+    capturePhoto();
+  }
+});
+
+startCamera();
+</script>
 </body>
 </html>
