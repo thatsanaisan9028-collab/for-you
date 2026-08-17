@@ -15,6 +15,10 @@
   #flash.on { animation: flashpop .25s ease-out; }
   @keyframes flashpop { 0% { opacity: .9; } 100% { opacity: 0; } }
 
+  /* real fill-light flash used for photo capture when no hardware torch is available */
+  #screenFlash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 11; transition: opacity .12s ease; }
+  #screenFlash.on { opacity: 1; }
+
   #countdownOverlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 9; pointer-events: none; }
   #countdownNum { font-size: 130px; font-weight: 800; color: #fff; text-shadow: 0 0 30px rgba(255,255,255,0.85); opacity: 0; transform: scale(0.5); }
   #countdownNum.show { animation: countPulse 1s ease-out; }
@@ -23,13 +27,24 @@
   #statusPill { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); color: #fff; font-size: 12px; padding: 6px 14px; border-radius: 20px; opacity: 0; transition: opacity .3s; pointer-events: none; letter-spacing: .3px; white-space: nowrap; z-index: 7; max-width: 82%; text-align:center; }
   #statusPill.show { opacity: 1; }
 
+  #recIndicator { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(255,0,0,0.75); color: #fff; font-size: 12.5px; font-weight: 700; padding: 6px 14px 6px 10px; border-radius: 20px; display: none; align-items: center; gap: 6px; z-index: 7; }
+  #recIndicator.show { display: flex; }
+  #recDot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: recBlink 1s infinite; }
+  @keyframes recBlink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
   #topBar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top)); z-index: 5; }
   .iconBtn { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.35); color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
   .iconBtn:active { background: rgba(255,255,255,0.25); }
   .iconBtn.toggled { background: #ff2d55; }
+  #flashBtn.toggled { background: #ffc93c; color: #000; }
+  #topBarRight { display: flex; gap: 8px; align-items: center; }
 
   #downloadLink { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); color: #000; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-decoration: none; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 6; }
   #downloadLink.show { opacity: 1; pointer-events: auto; }
+
+  #modeStrip { position: absolute; bottom: 214px; left: 0; right: 0; display: flex; gap: 8px; justify-content: center; padding: 4px 16px; z-index: 5; }
+  .modeChip { flex: 0 0 auto; padding: 7px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4); color: #fff; font-size: 12.5px; backdrop-filter: blur(6px); font-weight: 600; }
+  .modeChip.active { background: #fff; color: #000; border-color: #fff; }
 
   #toggleStrip { position: absolute; bottom: 172px; left: 0; right: 0; display: flex; gap: 8px; overflow-x: auto; padding: 4px 16px; scrollbar-width: none; z-index: 5; }
   #toggleStrip::-webkit-scrollbar { display: none; }
@@ -42,16 +57,40 @@
   .filterChip.active { background: #fff; color: #000; border-color: #fff; font-weight: 600; }
 
   #bottomBar { position: relative; height: 118px; padding-bottom: env(safe-area-inset-bottom); display: flex; align-items: center; justify-content: space-between; padding-left: 34px; padding-right: 34px; background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0)); z-index: 5; }
-  #thumbBtn { width: 46px; height: 46px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.6); background: #222 center/cover no-repeat; padding: 0; }
-  #shutterBtn { width: 74px; height: 74px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,0.35); padding: 0; box-shadow: 0 0 0 3px rgba(255,255,255,0.9) inset; }
+  #thumbBtn { width: 46px; height: 46px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.6); background: #222 center/cover no-repeat; padding: 0; position: relative; }
+  #thumbBtn.videoThumb::after { content: '▶'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; background: rgba(0,0,0,0.35); border-radius: 9px; }
+  #shutterBtn { width: 74px; height: 74px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,0.35); padding: 0; box-shadow: 0 0 0 3px rgba(255,255,255,0.9) inset; transition: border-radius .2s, background .2s; }
   #shutterBtn:active { transform: scale(0.92); }
   #shutterBtn.off, #shutterBtn:disabled { opacity: 0.35; pointer-events: none; }
+  #shutterBtn.videoMode { background: #ff2d55; box-shadow: 0 0 0 4px rgba(255,255,255,0.9) inset; }
+  #shutterBtn.videoMode.recording { border-radius: 18px; width: 60px; height: 60px; background: #ff2d55; box-shadow: 0 0 0 4px #ff2d55, 0 0 0 8px rgba(255,45,85,0.35); }
   #switchBtn { width: 46px; height: 46px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; }
   #switchBtn:active { background: rgba(255,255,255,0.3); }
 
   #offOverlay { position: absolute; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 10; color: rgba(255,255,255,0.7); font-size: 14px; }
   #offOverlay.show { display: flex; }
   #turnOnBtn { padding: 12px 28px; border-radius: 24px; border: none; background: #fff; color: #000; font-size: 15px; font-weight: 600; }
+
+  /* ===== gallery ===== */
+  #galleryOverlay { position: fixed; inset: 0; background: #000; z-index: 30; display: none; flex-direction: column; }
+  #galleryOverlay.show { display: flex; }
+  #galleryHeader { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top)); color: #fff; }
+  #galleryTitle { font-size: 15px; font-weight: 700; }
+  #galleryGrid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; align-content: start; }
+  .galleryCell { position: relative; border: none; padding: 0; aspect-ratio: 1/1; background: #111 center/cover no-repeat; }
+  .galleryCell.videoCell { background: #111; display: flex; align-items: center; justify-content: center; }
+  .galleryCell .playIcon { color: #fff; font-size: 22px; opacity: .9; }
+  #galleryEmpty { display: none; flex: 1; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 14px; }
+
+  #viewerOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 31; display: none; flex-direction: column; align-items: center; justify-content: center; }
+  #viewerOverlay.show { display: flex; }
+  #viewerCloseBtn { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff; font-size: 16px; }
+  #viewerContent { max-width: 100vw; max-height: 78vh; display: flex; align-items: center; justify-content: center; }
+  #viewerContent img, #viewerContent video { max-width: 100vw; max-height: 78vh; object-fit: contain; }
+  #viewerActions { display: flex; gap: 14px; margin-top: 20px; padding-bottom: env(safe-area-inset-bottom); }
+  #viewerActions a, #viewerActions button { padding: 10px 20px; border-radius: 22px; border: none; font-size: 14px; font-weight: 600; text-decoration: none; }
+  #viewerDownload { background: #fff; color: #000; }
+  #viewerDelete { background: rgba(255,45,85,0.85); color: #fff; }
 </style>
 </head>
 <body>
@@ -61,13 +100,18 @@
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
     <div id="flash"></div>
+    <div id="screenFlash"></div>
     <div id="countdownOverlay"><div id="countdownNum"></div></div>
     <div id="statusPill">กำลังเปิดกล้อง...</div>
+    <div id="recIndicator"><span id="recDot"></span><span id="recTime">00:00</span></div>
 
     <div id="topBar">
       <button class="iconBtn" id="stopBtn" title="ปิดกล้อง">⏻</button>
       <a id="downloadLink" download="photo.png">บันทึกรูปแล้ว ⬇️</a>
-      <button class="iconBtn" id="timerBtn" title="ตั้งเวลาถ่าย">⏱</button>
+      <div id="topBarRight">
+        <button class="iconBtn" id="flashBtn" title="แฟลช">⚡</button>
+        <button class="iconBtn" id="timerBtn" title="ตั้งเวลาถ่าย">⏱</button>
+      </div>
     </div>
 
     <div id="offOverlay">
@@ -77,9 +121,15 @@
     </div>
   </div>
 
+  <div id="modeStrip">
+    <button class="modeChip active" data-mode="photo">📷 ถ่ายภาพ</button>
+    <button class="modeChip" data-mode="video">🎥 ถ่ายวิดีโอ</button>
+  </div>
+
   <div id="toggleStrip">
     <button class="toggleChip" data-toggle="ghost">👥 แยกร่าง</button>
     <button class="toggleChip" data-toggle="hand">✋⚡ พลังมือ</button>
+    <button class="toggleChip" data-toggle="mask">😷 หน้ากาก</button>
   </div>
 
   <div id="filterStrip">
@@ -110,9 +160,28 @@
   </div>
 
   <div id="bottomBar">
-    <button id="thumbBtn"></button>
+    <button id="thumbBtn" title="แกลเลอรี่"></button>
     <button id="shutterBtn"></button>
     <button id="switchBtn">🔄</button>
+  </div>
+</div>
+
+<div id="galleryOverlay">
+  <div id="galleryHeader">
+    <button class="iconBtn" id="galleryCloseBtn">✕</button>
+    <div id="galleryTitle">แกลเลอรี่</div>
+    <div style="width:40px"></div>
+  </div>
+  <div id="galleryGrid"></div>
+  <div id="galleryEmpty">ยังไม่มีรูปหรือวิดีโอที่ถ่ายไว้</div>
+</div>
+
+<div id="viewerOverlay">
+  <button id="viewerCloseBtn">✕</button>
+  <div id="viewerContent"></div>
+  <div id="viewerActions">
+    <a id="viewerDownload" download>⬇️ บันทึก</a>
+    <button id="viewerDelete">🗑 ลบ</button>
   </div>
 </div>
 
@@ -122,6 +191,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const chips = document.querySelectorAll('.filterChip');
 const toggleChips = document.querySelectorAll('.toggleChip');
+const modeChips = document.querySelectorAll('.modeChip');
 const shutterBtn = document.getElementById('shutterBtn');
 const switchBtn = document.getElementById('switchBtn');
 const stopBtn = document.getElementById('stopBtn');
@@ -129,10 +199,24 @@ const turnOnBtn = document.getElementById('turnOnBtn');
 const offOverlay = document.getElementById('offOverlay');
 const statusPill = document.getElementById('statusPill');
 const flashEl = document.getElementById('flash');
+const screenFlashEl = document.getElementById('screenFlash');
 const downloadLink = document.getElementById('downloadLink');
 const thumbBtn = document.getElementById('thumbBtn');
 const timerBtn = document.getElementById('timerBtn');
+const flashBtn = document.getElementById('flashBtn');
 const countdownNum = document.getElementById('countdownNum');
+const recIndicator = document.getElementById('recIndicator');
+const recTime = document.getElementById('recTime');
+
+const galleryOverlay = document.getElementById('galleryOverlay');
+const galleryGrid = document.getElementById('galleryGrid');
+const galleryEmpty = document.getElementById('galleryEmpty');
+const galleryCloseBtn = document.getElementById('galleryCloseBtn');
+const viewerOverlay = document.getElementById('viewerOverlay');
+const viewerContent = document.getElementById('viewerContent');
+const viewerCloseBtn = document.getElementById('viewerCloseBtn');
+const viewerDownload = document.getElementById('viewerDownload');
+const viewerDelete = document.getElementById('viewerDelete');
 
 let currentFilter = 'none';
 let facingMode = 'user';
@@ -151,6 +235,22 @@ const filters = {
   none:'none', grayscale:'grayscale(1)', sepia:'sepia(1)', invert:'invert(1)',
   blur:'blur(4px)', bright:'brightness(1.6) saturate(1.3)', contrast:'contrast(2)'
 };
+
+/* ================= gallery state ================= */
+let mediaItems = []; // { id, type:'photo'|'video', url, blob }
+
+/* ================= video recording state ================= */
+let currentMode = 'photo'; // 'photo' | 'video'
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordTimerInterval = null;
+let recordStartTime = 0;
+let audioStream = null;
+
+/* ================= flash / torch state ================= */
+let torchSupported = false;
+let flashOn = false;
 
 function showStatus(msg, autoHide){
   statusPill.textContent = msg;
@@ -178,6 +278,7 @@ async function startCamera(){
     canvas.height = video.videoHeight || 480;
     setupWorkCanvas();
     statusPill.classList.remove('show');
+    await updateTorchCapability();
     draw();
   }catch(err){
     showStatus('เปิดกล้องไม่ได้');
@@ -186,6 +287,7 @@ async function startCamera(){
   }
 }
 function stopCamera(){
+  if (isRecording) stopRecording();
   if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
   if (stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
   video.srcObject = null;
@@ -229,13 +331,6 @@ function drawCloneRow(w,h){
     ctx.drawImage(video, sx, sy, sw, sh, i * slotW, 0, slotW, h);
     ctx.restore();
   }
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.lineWidth = 1;
-  for (let i = 1; i < n; i++){
-    ctx.beginPath(); ctx.moveTo(i * slotW, 0); ctx.lineTo(i * slotW, h); ctx.stroke();
-  }
-  ctx.restore();
 }
 
 /* ================= pixel-based filters ================= */
@@ -546,6 +641,259 @@ let lastGesture = [null, null];
 let lastHandSize = [null, null];
 let beamChargeStart = null;
 
+/* ================= หน้ากาก (face masks) ================= */
+let faceModel = null, faceBusy = false, latestFaceResults = null;
+let maskEnabled = false;
+const maskStyles = ['sunglasses','visor','dragon','cat','clown','mustache','alien'];
+let maskIndex = -1; // -1 = off
+
+function maskLabel(key){
+  const labels = { sunglasses:'แว่นเท่', visor:'วิเซอร์ไซไฟ', dragon:'มังกรไฟ', cat:'แมวเหมียว', clown:'ตัวตลก', mustache:'หนวด+หมวก', alien:'เอเลี่ยน' };
+  return labels[key] || key;
+}
+function loadFaceLib(cb){
+  if (window.FaceMesh){ cb(); return; }
+  showStatus('กำลังโหลดระบบตรวจจับใบหน้า...');
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js';
+  s.crossOrigin = 'anonymous';
+  s.onload = () => cb();
+  s.onerror = () => {
+    showStatus('โหลดระบบตรวจจับใบหน้าไม่สำเร็จ (เช็คอินเทอร์เน็ต)', true);
+    maskEnabled = false; maskIndex = -1;
+    const maskChip = document.querySelector('[data-toggle="mask"]');
+    if (maskChip){ maskChip.classList.remove('active'); maskChip.textContent = '😷 หน้ากาก'; }
+  };
+  document.head.appendChild(s);
+}
+function initFaceModel(){
+  faceModel = new FaceMesh({ locateFile: (f) => 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/' + f });
+  faceModel.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+  faceModel.onResults((res) => { latestFaceResults = res; faceBusy = false; });
+}
+function feedFace(){
+  if (!faceModel || faceBusy || !video.videoWidth) return;
+  faceBusy = true;
+  faceModel.send({ image: video }).catch(()=>{ faceBusy = false; });
+}
+function faceMidEye(lm){ return { x:(lm[33].x+lm[263].x)/2, y:(lm[33].y+lm[263].y)/2 }; }
+function faceAngle(lm){ return Math.atan2(lm[263].y-lm[33].y, lm[263].x-lm[33].x); }
+function roundRectPath(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function maskSunglasses(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  const lensR = eyeDist*0.34;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ctx.fillStyle = 'rgba(10,10,15,0.92)';
+  ctx.strokeStyle = '#111'; ctx.lineWidth = eyeDist*0.06;
+  ctx.beginPath(); ctx.ellipse(-eyeDist*0.32,0, lensR,lensR*0.72,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(eyeDist*0.32,0, lensR,lensR*0.72,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = eyeDist*0.08;
+  ctx.beginPath(); ctx.moveTo(-eyeDist*0.08,0); ctx.lineTo(eyeDist*0.08,0); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath(); ctx.ellipse(-eyeDist*0.4,-lensR*0.3, lensR*0.28, lensR*0.14, -0.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(eyeDist*0.24,-lensR*0.3, lensR*0.28, lensR*0.14, -0.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function maskVisor(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  const hue = (frameCount*3)%360;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  const wV = eyeDist*2.2, hV = eyeDist*0.55;
+  const grad = ctx.createLinearGradient(-wV/2,0,wV/2,0);
+  grad.addColorStop(0,'hsla('+hue+',100%,55%,0.85)');
+  grad.addColorStop(0.5,'hsla('+((hue+60)%360)+',100%,60%,0.9)');
+  grad.addColorStop(1,'hsla('+((hue+120)%360)+',100%,55%,0.85)');
+  ctx.fillStyle = grad;
+  ctx.shadowColor = 'hsl('+hue+',100%,60%)'; ctx.shadowBlur = 18;
+  roundRectPath(-wV/2,-hV/2,wV,hV,hV*0.4);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.save();
+  roundRectPath(-wV/2,-hV/2,wV,hV,hV*0.4);
+  ctx.clip();
+  ctx.globalAlpha = 0.25; ctx.strokeStyle = '#fff';
+  for (let x=-wV/2; x<wV/2; x+=6){ ctx.beginPath(); ctx.moveTo(x,-hV/2); ctx.lineTo(x,hV/2); ctx.stroke(); }
+  ctx.restore();
+  ctx.restore();
+}
+function maskDragon(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#7a0d0d';
+  [-1,1].forEach(side=>{
+    ctx.save();
+    ctx.translate(side*eyeDist*0.55, -eyeDist*1.1);
+    ctx.rotate(side*0.35);
+    ctx.beginPath();
+    ctx.moveTo(0,0); ctx.quadraticCurveTo(eyeDist*0.12*side, -eyeDist*0.5, 0,-eyeDist*0.85);
+    ctx.quadraticCurveTo(-eyeDist*0.12*side, -eyeDist*0.5, 0,0);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.fillStyle = 'rgba(180,20,20,0.55)';
+  [-1,1].forEach(side=>{
+    for (let i=0;i<5;i++){
+      ctx.beginPath();
+      ctx.ellipse(side*eyeDist*(0.75+i*0.05), eyeDist*0.15+i*eyeDist*0.12, eyeDist*0.07,eyeDist*0.09,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  });
+  const mouthY = eyeDist*1.3;
+  for (let i=0;i<3;i++){
+    const t = (frameCount*0.15+i*2)%3;
+    const g = ctx.createRadialGradient(0, mouthY+t*eyeDist*0.3, 0, 0, mouthY+t*eyeDist*0.3, eyeDist*0.25);
+    g.addColorStop(0,'rgba(255,180,60,0.8)');
+    g.addColorStop(1,'rgba(255,60,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, mouthY+t*eyeDist*0.3, eyeDist*0.22*(1-t/3), 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function maskCat(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#3a2a20';
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.moveTo(side*eyeDist*0.75,-eyeDist*0.95);
+    ctx.lineTo(side*eyeDist*1.15,-eyeDist*1.9);
+    ctx.lineTo(side*eyeDist*0.35,-eyeDist*1.15);
+    ctx.closePath(); ctx.fill();
+  });
+  ctx.fillStyle = '#e79fb0';
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.moveTo(side*eyeDist*0.7,-eyeDist*1.0);
+    ctx.lineTo(side*eyeDist*0.98,-eyeDist*1.65);
+    ctx.lineTo(side*eyeDist*0.48,-eyeDist*1.15);
+    ctx.closePath(); ctx.fill();
+  });
+  ctx.fillStyle = '#ff6fa0';
+  ctx.beginPath(); ctx.moveTo(0,eyeDist*0.55); ctx.lineTo(-eyeDist*0.09,eyeDist*0.68); ctx.lineTo(eyeDist*0.09,eyeDist*0.68); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2;
+  [-1,1].forEach(side=>{
+    for (let i=0;i<3;i++){
+      const yOff = eyeDist*0.6 + i*eyeDist*0.08;
+      ctx.beginPath();
+      ctx.moveTo(side*eyeDist*0.25, yOff);
+      ctx.lineTo(side*eyeDist*0.9, yOff - eyeDist*0.05 + i*eyeDist*0.04);
+      ctx.stroke();
+    }
+  });
+  ctx.restore();
+}
+function maskClown(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ['#ff3355','#3355ff','#ffd23f'].forEach((c,i)=>{
+    ctx.strokeStyle = c; ctx.lineWidth = eyeDist*0.28; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0,-eyeDist*0.3, eyeDist*(1.3+i*0.05), Math.PI*(0.9-i*0.05), Math.PI*(2.1+i*0.05));
+    ctx.stroke();
+  });
+  ctx.fillStyle = '#ff1f3d';
+  ctx.beginPath(); ctx.arc(0, eyeDist*0.62, eyeDist*0.22, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.beginPath(); ctx.arc(-eyeDist*0.07, eyeDist*0.55, eyeDist*0.06,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,60,90,0.5)';
+  [-1,1].forEach(side=>{
+    ctx.beginPath(); ctx.arc(side*eyeDist*0.85, eyeDist*0.55, eyeDist*0.16,0,Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+}
+function maskMustache(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#161616';
+  ctx.fillRect(-eyeDist*0.55,-eyeDist*2.05, eyeDist*1.1, eyeDist*0.18);
+  ctx.fillRect(-eyeDist*0.38,-eyeDist*2.55, eyeDist*0.76, eyeDist*0.55);
+  ctx.fillStyle = '#c81f3b';
+  ctx.fillRect(-eyeDist*0.38,-eyeDist*2.15, eyeDist*0.76, eyeDist*0.12);
+  ctx.fillStyle = '#2b1a10';
+  [1,-1].forEach(side=>{
+    ctx.save(); ctx.scale(side,1);
+    ctx.beginPath();
+    ctx.moveTo(0, eyeDist*0.62);
+    ctx.quadraticCurveTo(eyeDist*0.28, eyeDist*0.5, eyeDist*0.55, eyeDist*0.7);
+    ctx.quadraticCurveTo(eyeDist*0.35, eyeDist*0.62, eyeDist*0.12, eyeDist*0.68);
+    ctx.quadraticCurveTo(0, eyeDist*0.72, 0, eyeDist*0.62);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function maskAlien(lm,w,h){
+  const mid = faceMidEye(lm), angle = faceAngle(lm);
+  const eyeDist = dist(lm[33],lm[263]) * w;
+  ctx.save();
+  ctx.translate(mid.x*w, mid.y*h);
+  ctx.rotate(angle);
+  ctx.fillStyle = 'rgba(80,220,140,0.28)';
+  ctx.beginPath(); ctx.ellipse(0,eyeDist*0.3, eyeDist*1.4, eyeDist*2.0, 0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#2f8f5f'; ctx.lineWidth = eyeDist*0.06;
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.moveTo(side*eyeDist*0.3,-eyeDist*1.0);
+    ctx.lineTo(side*eyeDist*0.55,-eyeDist*1.9);
+    ctx.stroke();
+    ctx.fillStyle = '#7fffb0';
+    ctx.beginPath(); ctx.arc(side*eyeDist*0.55,-eyeDist*1.9, eyeDist*0.12,0,Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle = 'rgba(5,10,10,0.92)';
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.ellipse(side*eyeDist*0.38,0, eyeDist*0.28, eyeDist*0.42, side*0.15, 0, Math.PI*2);
+    ctx.fill();
+  });
+  ctx.fillStyle = 'rgba(150,255,200,0.5)';
+  [-1,1].forEach(side=>{
+    ctx.beginPath(); ctx.ellipse(side*eyeDist*0.32,-eyeDist*0.12, eyeDist*0.08,eyeDist*0.12,0,0,Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+}
+function drawFaceMask(){
+  if (!latestFaceResults || !latestFaceResults.multiFaceLandmarks || !latestFaceResults.multiFaceLandmarks.length) return;
+  if (maskIndex < 0) return;
+  const lm = latestFaceResults.multiFaceLandmarks[0];
+  const w = canvas.width, h = canvas.height;
+  const style = maskStyles[maskIndex];
+  if (style === 'sunglasses') maskSunglasses(lm,w,h);
+  else if (style === 'visor') maskVisor(lm,w,h);
+  else if (style === 'dragon') maskDragon(lm,w,h);
+  else if (style === 'cat') maskCat(lm,w,h);
+  else if (style === 'clown') maskClown(lm,w,h);
+  else if (style === 'mustache') maskMustache(lm,w,h);
+  else if (style === 'alien') maskAlien(lm,w,h);
+}
+
 function loadHandsLib(cb){
   if (window.Hands){ cb(); return; }
   showStatus('กำลังโหลดระบบตรวจจับมือ...');
@@ -560,7 +908,7 @@ function initHandsModel(){
   handsModel = new Hands({ locateFile: (f) => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f });
   handsModel.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
   handsModel.onResults((res) => { latestHandResults = res; handsBusy = false; });
-  showStatus('กางฝ่ามือ=ออร่า | ชู2นิ้ว=เลเซอร์ | ชี้นิ้ว=คทา | กำปั้นพุ่ง=คลื่นกระแทก | โป้งขึ้น=ประกายดาว', true);
+  showStatus('กางฝ่ามือ=ออร่า | ชู2นิ้ว=เลเซอร์ | ชี้นิ้ว=คทา | กำปั้นพุ่ง=คลื่นกระแทก | โป้งขึ้น=ประกายดาว | 🤟=สายฟ้า | 👌=พอร์ทัล', true);
 }
 function feedHands(){
   if (!handsModel || handsBusy || !video.videoWidth) return;
@@ -573,10 +921,13 @@ function classifyGesture(lm){
   const i=fingerUp(lm,8,6), m=fingerUp(lm,12,10), r=fingerUp(lm,16,14), p=fingerUp(lm,20,18);
   const wrist = lm[0];
   const thumbExt = dist(lm[4],wrist) > dist(lm[3],wrist) * 1.15;
+  const thumbIndexClose = dist(lm[4], lm[8]) < 0.055;
   if (i && m && r && p) return 'open';
   if (!i && !m && !r && !p) return thumbExt ? 'thumbsup' : 'fist';
   if (i && m && !r && !p) return 'peace';
   if (i && !m && !r && !p) return 'point';
+  if (i && !m && !r && p) return 'rock';
+  if (thumbIndexClose && m && r && p) return 'ok';
   return 'other';
 }
 
@@ -702,6 +1053,46 @@ function drawHandPower(){
       spawnBurst(tip.x, tip.y, color, 2);
     }
 
+    if (gesture === 'rock'){
+      const tip = lm[8];
+      let cx = tip.x*w, cy = tip.y*h;
+      ctx.save();
+      ctx.strokeStyle = '#c9f2ff';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#7fdfff'; ctx.shadowBlur = 22;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      for (let s = 0; s < 6; s++){
+        cx += (Math.random()-0.5)*44;
+        cy += 20 + Math.random()*12;
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+      ctx.restore();
+      if (Math.random() < 0.55) spawnBurst(tip.x, tip.y, '#aef6ff', 3);
+    }
+
+    if (gesture === 'ok'){
+      const ringCenter = { x:(lm[4].x+lm[8].x)/2, y:(lm[4].y+lm[8].y)/2 };
+      const t = frameCount*0.12;
+      ctx.save();
+      ctx.translate(ringCenter.x*w, ringCenter.y*h);
+      ctx.rotate(t);
+      const portalGrad = ctx.createRadialGradient(0,0,2,0,0,34);
+      portalGrad.addColorStop(0,'rgba(180,80,255,0.85)');
+      portalGrad.addColorStop(0.7,'rgba(120,40,220,0.4)');
+      portalGrad.addColorStop(1,'rgba(120,40,220,0)');
+      ctx.fillStyle = portalGrad;
+      ctx.beginPath(); ctx.arc(0,0,34,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(220,180,255,0.9)'; ctx.lineWidth = 2;
+      for (let k=0;k<3;k++){
+        ctx.beginPath();
+        ctx.ellipse(0,0, 22-k*5, 8-k*2, 0, 0, Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.restore();
+      if (Math.random() < 0.4) spawnBurst(ringCenter.x, ringCenter.y, '#c9a0ff', 2);
+    }
+
     if (gesture === 'thumbsup'){
       if (lastGesture[idx] !== 'thumbsup'){
         spawnBurst(palm.x, palm.y, '#ffd23f', 40);
@@ -751,8 +1142,10 @@ function draw(){
     else drawFilteredFrame();
   }
   if (handEnabled && handsModel) drawHandPower();
+  if (maskEnabled && faceModel) drawFaceMask();
   ctx.restore();
   if (handEnabled && frameCount % 2 === 0) feedHands();
+  if (maskEnabled && frameCount % 2 === 1) feedFace();
   frameCount++;
   rafId = requestAnimationFrame(draw);
 }
@@ -778,6 +1171,107 @@ timerBtn.addEventListener('click', () => {
   timerBtn.classList.toggle('toggled', timerSec > 0);
   showStatus(timerSec === 0 ? 'ปิดตั้งเวลาถ่าย' : ('ตั้งเวลาถ่าย ' + timerSec + ' วินาที'), true);
 });
+
+/* ================= flash / torch ================= */
+async function updateTorchCapability(){
+  torchSupported = false;
+  if (stream){
+    const track = stream.getVideoTracks()[0];
+    if (track && track.getCapabilities){
+      try{
+        const caps = track.getCapabilities();
+        torchSupported = !!caps.torch;
+      }catch(e){ torchSupported = false; }
+    }
+  }
+  // re-apply flash state to the new stream/track if it was left on
+  if (flashOn && torchSupported) await setTorch(true);
+}
+async function setTorch(on){
+  if (!stream) return;
+  const track = stream.getVideoTracks()[0];
+  if (torchSupported && track){
+    try{ await track.applyConstraints({advanced:[{torch:on}]}); }catch(e){ /* ignore */ }
+  }
+}
+flashBtn.addEventListener('click', async () => {
+  flashOn = !flashOn;
+  flashBtn.classList.toggle('toggled', flashOn);
+  if (torchSupported){
+    await setTorch(flashOn);
+    showStatus(flashOn ? 'เปิดไฟแฟลชแล้ว 🔦' : 'ปิดไฟแฟลช', true);
+  } else {
+    showStatus(flashOn ? 'กล้องนี้ไม่มีไฟแฟลชจริง จะใช้แสงหน้าจอช่วยตอนถ่ายภาพแทน' : 'ปิดแฟลชหน้าจอ', true);
+  }
+});
+
+/* ================= gallery ================= */
+function addToGallery(type, url, blob){
+  const item = { id: Date.now() + Math.random(), type, url, blob };
+  mediaItems.unshift(item);
+  updateThumbButton();
+  renderGallery();
+  return item;
+}
+function updateThumbButton(){
+  if (!mediaItems.length) return;
+  const latest = mediaItems[0];
+  if (latest.type === 'photo'){
+    thumbBtn.style.backgroundImage = 'url(' + latest.url + ')';
+    thumbBtn.classList.remove('videoThumb');
+  } else {
+    thumbBtn.style.backgroundImage = 'none';
+    thumbBtn.classList.add('videoThumb');
+  }
+}
+function renderGallery(){
+  galleryGrid.innerHTML = '';
+  galleryEmpty.style.display = mediaItems.length ? 'none' : 'flex';
+  mediaItems.forEach(item => {
+    const cell = document.createElement('button');
+    cell.className = 'galleryCell';
+    if (item.type === 'photo'){
+      cell.style.backgroundImage = 'url(' + item.url + ')';
+    } else {
+      cell.classList.add('videoCell');
+      cell.innerHTML = '<span class="playIcon">▶</span>';
+    }
+    cell.addEventListener('click', () => openViewer(item));
+    galleryGrid.appendChild(cell);
+  });
+}
+function openViewer(item){
+  viewerContent.innerHTML = '';
+  if (item.type === 'photo'){
+    const img = document.createElement('img');
+    img.src = item.url;
+    viewerContent.appendChild(img);
+  } else {
+    const v = document.createElement('video');
+    v.src = item.url; v.controls = true; v.autoplay = true; v.playsInline = true;
+    viewerContent.appendChild(v);
+  }
+  viewerDownload.href = item.url;
+  viewerDownload.download = (item.type === 'photo' ? 'photo-' : 'video-') + Math.round(item.id) + (item.type === 'photo' ? '.png' : '.webm');
+  viewerDelete.onclick = () => {
+    mediaItems = mediaItems.filter(m => m.id !== item.id);
+    if (item.type === 'video') URL.revokeObjectURL(item.url);
+    renderGallery();
+    updateThumbButton();
+    closeViewer();
+  };
+  viewerOverlay.classList.add('show');
+}
+function closeViewer(){
+  viewerOverlay.classList.remove('show');
+  viewerContent.innerHTML = '';
+}
+thumbBtn.addEventListener('click', () => {
+  renderGallery();
+  galleryOverlay.classList.add('show');
+});
+galleryCloseBtn.addEventListener('click', () => galleryOverlay.classList.remove('show'));
+viewerCloseBtn.addEventListener('click', closeViewer);
 
 /* ================= UI events ================= */
 chips.forEach(chip => {
@@ -805,35 +1299,155 @@ toggleChips.forEach(chip => {
         latestHandResults = null; particles = []; shockwaves = [];
         statusPill.classList.remove('show');
       }
+    } else if (type === 'mask'){
+      maskIndex++;
+      if (maskIndex >= maskStyles.length) maskIndex = -1;
+      maskEnabled = maskIndex >= 0;
+      chip.classList.toggle('active', maskEnabled);
+      chip.textContent = maskEnabled ? ('😷 ' + maskLabel(maskStyles[maskIndex])) : '😷 หน้ากาก';
+      if (maskEnabled){
+        if (!window.FaceMesh) loadFaceLib(() => initFaceModel());
+        else if (!faceModel) initFaceModel();
+        showStatus('หน้ากาก: ' + maskLabel(maskStyles[maskIndex]) + ' (แตะอีกครั้งเพื่อเปลี่ยน)', true);
+      } else {
+        latestFaceResults = null;
+        statusPill.classList.remove('show');
+      }
     }
   });
 });
+modeChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    if (isRecording) return; // don't allow switching mode mid-recording
+    const mode = chip.dataset.mode;
+    modeChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentMode = mode;
+    shutterBtn.classList.toggle('videoMode', currentMode === 'video');
+    showStatus(currentMode === 'video' ? 'โหมดถ่ายวิดีโอ' : 'โหมดถ่ายภาพ', true);
+  });
+});
 switchBtn.addEventListener('click', () => {
+  if (isRecording) return;
   facingMode = facingMode === 'user' ? 'environment' : 'user';
   startCamera();
 });
 stopBtn.addEventListener('click', fullStop);
 turnOnBtn.addEventListener('click', startCamera);
 
+/* ================= photo capture ================= */
+function doPhotoFlashThen(action){
+  if (flashOn && !torchSupported){
+    // no real hardware torch: brighten the screen briefly right before the shot
+    // (works like a phone's front-camera flash — the bright screen adds real fill light)
+    screenFlashEl.classList.add('on');
+    setTimeout(() => {
+      action();
+      setTimeout(() => screenFlashEl.classList.remove('on'), 120);
+    }, 160);
+  } else {
+    action();
+  }
+}
 function capturePhoto(){
   const shot = document.createElement('canvas');
   shot.width = canvas.width; shot.height = canvas.height;
   shot.getContext('2d').drawImage(canvas, 0, 0);
   const dataUrl = shot.toDataURL('image/png');
   flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+  addToGallery('photo', dataUrl);
   downloadLink.href = dataUrl;
+  downloadLink.textContent = 'บันทึกรูปแล้ว ⬇️';
   downloadLink.classList.add('show');
   clearTimeout(downloadLink._t);
   downloadLink._t = setTimeout(() => downloadLink.classList.remove('show'), 2500);
-  thumbBtn.style.backgroundImage = 'url(' + dataUrl + ')';
 }
-shutterBtn.addEventListener('click', () => {
+
+/* ================= video recording ================= */
+async function ensureAudioTrack(){
+  if (audioStream) return audioStream;
+  try{
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  }catch(e){
+    audioStream = null; // record without audio if mic denied/unavailable
+  }
+  return audioStream;
+}
+function pickMimeType(){
+  const candidates = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for (const c of candidates){
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+  }
+  return '';
+}
+function startRecording(){
+  if (!canvas.captureStream){
+    alert('เบราว์เซอร์นี้ไม่รองรับการอัดวิดีโอจากแคนวาส');
+    return;
+  }
+  const canvasStream = canvas.captureStream(30);
+  let tracks = canvasStream.getVideoTracks();
+  if (audioStream) tracks = tracks.concat(audioStream.getAudioTracks());
+  const combined = new MediaStream(tracks);
+  const mimeType = pickMimeType();
+  try{
+    mediaRecorder = mimeType ? new MediaRecorder(combined, { mimeType }) : new MediaRecorder(combined);
+  }catch(e){
+    alert('เริ่มอัดวิดีโอไม่ได้: ' + e.message);
+    return;
+  }
+  recordedChunks = [];
+  mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = onRecordingStop;
+  mediaRecorder.start();
+  isRecording = true;
+  recordStartTime = Date.now();
+  shutterBtn.classList.add('recording');
+  recIndicator.classList.add('show');
+  recordTimerInterval = setInterval(updateRecTime, 250);
+  updateRecTime();
+}
+function stopRecording(){
+  if (mediaRecorder && isRecording){
+    mediaRecorder.stop();
+  }
+}
+function onRecordingStop(){
+  isRecording = false;
+  shutterBtn.classList.remove('recording');
+  recIndicator.classList.remove('show');
+  clearInterval(recordTimerInterval);
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  addToGallery('video', url, blob);
+  showStatus('บันทึกวิดีโอแล้ว ✅', true);
+}
+function updateRecTime(){
+  const sec = Math.floor((Date.now() - recordStartTime) / 1000);
+  const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+  const ss = String(sec % 60).padStart(2, '0');
+  recTime.textContent = mm + ':' + ss;
+}
+
+/* ================= shutter button (photo or video depending on mode) ================= */
+shutterBtn.addEventListener('click', async () => {
   if (!stream) return;
-  if (timerSec > 0){
-    shutterBtn.disabled = true;
-    runCountdown(timerSec, () => { capturePhoto(); shutterBtn.disabled = false; });
+  if (currentMode === 'video'){
+    if (isRecording){ stopRecording(); return; }
+    const begin = async () => { await ensureAudioTrack(); startRecording(); };
+    if (timerSec > 0){
+      shutterBtn.disabled = true;
+      runCountdown(timerSec, async () => { await begin(); shutterBtn.disabled = false; });
+    } else {
+      await begin();
+    }
   } else {
-    capturePhoto();
+    if (timerSec > 0){
+      shutterBtn.disabled = true;
+      runCountdown(timerSec, () => { doPhotoFlashThen(capturePhoto); shutterBtn.disabled = false; });
+    } else {
+      doPhotoFlashThen(capturePhoto);
+    }
   }
 });
 
